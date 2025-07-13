@@ -12,6 +12,14 @@ import zipfile
 import base64
 from io import BytesIO
 
+# Page configuration must be FIRST Streamlit command
+st.set_page_config(
+    page_title="SafePath Navigator",
+    page_icon="🕊️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # Custom CSS for professional design
 st.markdown("""
 <style>
@@ -273,14 +281,6 @@ def create_offline_package(resources):
 
 # Initialize session state
 init_session_state()
-
-# Page configuration
-st.set_page_config(
-    page_title="SafePath Navigator",
-    page_icon="🕊️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Safe exit button
 if not st.session_state.safe_mode:
@@ -645,14 +645,14 @@ elif selected == "Offline Access":
                 <ol>
                     <li>Open this page on your mobile device</li>
                     <li>Tap the share button in your browser</li>
-                    <li>Select \"Add to Home Screen\"</li>
+                    <li>Select "Add to Home Screen"</li>
                 </ol>
                 <p><strong>Once installed:</strong></p>
                 <ul>
                     <li>Works completely offline</li>
                     <li>Fast access to emergency contacts</li>
                     <li>GPS navigation to shelters</li>
-                    <li>Discreet \"Safe Exit\" feature</li>
+                    <li>Discreet "Safe Exit" feature</li>
                 </ul>
             </div>
         """, unsafe_allow_html=True)
