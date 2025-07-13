@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 from streamlit_option_menu import option_menu
 import pandas as pd
@@ -147,6 +146,8 @@ def init_session_state():
         st.session_state.geolocation = None
     if 'safe_mode' not in st.session_state:
         st.session_state.safe_mode = False
+    if 'emergency_expanded' not in st.session_state:
+        st.session_state.emergency_expanded = False
 
 # Safe exit function
 def safe_exit():
@@ -155,10 +156,7 @@ def safe_exit():
 
 # Load resources data (simulate online/offline)
 def load_resources():
-    # In a real app, this would fetch from a remote database
-    # Here we use a local dataset with offline fallback
-    
-    # Sample dataset - in production this would be larger
+    # Sample dataset
     data = {
         'name': [
             'Hope Shelter', 
@@ -331,8 +329,7 @@ with st.sidebar:
     location_input = st.text_input("Enter your location (city, address, or postal code)", key="location_input")
     
     if st.button("Use Current Location", key="geolocate_btn"):
-        # In a real app, this would use browser geolocation API
-        # Here we simulate with a default location
+        # Simulate with a default location
         st.session_state.geolocation = (-25.7479, 28.2293)  # Pretoria coordinates
         st.success("Location set to current position")
     
@@ -432,7 +429,11 @@ if selected == "Resource Finder":
         if not filtered_resources.empty:
             # Create map
             st.subheader("Resource Map")
-            m = folium.Map(location=[user_location[0], zoom_start=10) if st.session_state.geolocation else folium.Map(location=[-28.4793, 24.6727], zoom_start=5)
+            if st.session_state.geolocation:
+                user_location = st.session_state.geolocation
+                m = folium.Map(location=user_location, zoom_start=10)
+            else:
+                m = folium.Map(location=[-28.4793, 24.6727], zoom_start=5)  # Default to South Africa view
             
             # Add user location
             if st.session_state.geolocation:
@@ -447,7 +448,11 @@ if selected == "Resource Finder":
                 folium.Marker(
                     location=[row['latitude'], row['longitude']],
                     popup=f"<b>{row['name']}</b><br>{row['type']}<br>📞 {row['phone']}",
-                    icon=folium.Icon(color="red" if row['type'] == "Shelter" else "green", icon="home" if row['type'] == "Shelter" else "balance-scale", prefix="fa")
+                    icon=folium.Icon(
+                        color="red" if row['type'] == "Shelter" else "green", 
+                        icon="home" if row['type'] == "Shelter" else "balance-scale", 
+                        prefix="fa"
+                    )
                 ).add_to(m)
             
             # Display map
@@ -456,7 +461,7 @@ if selected == "Resource Finder":
             # Show resource cards
             st.subheader(f"Found {len(filtered_resources)} Resources")
             for idx, row in filtered_resources.iterrows():
-                distance_info = f"{row['distance']:.1f} km away" if st.session_state.geolocation else ""
+                distance_info = f"{row['distance']:.1f} km away" if 'distance' in row and st.session_state.geolocation else ""
                 
                 with st.expander(f"### {row['name']} - {row['type']} {distance_info}", expanded=False):
                     col1, col2 = st.columns([1, 2])
@@ -554,28 +559,29 @@ elif selected == "Safety Planning":
         step1 = st.checkbox("### Step 1: Identify safe areas in your home")
         if step1:
             st.text_area("Where are the safest areas? (Avoid kitchens, bathrooms, or rooms with weapons)", 
-                        height=100, placeholder="e.g., Near exits, rooms with phones")
+                        height=100, placeholder="e.g., Near exits, rooms with phones", key="safe_areas")
         
         step2 = st.checkbox("### Step 2: Prepare an emergency bag")
         if step2:
             st.multiselect("What to include:",
                           ["Important documents", "Money and bank cards", "Medications", 
-                           "Extra keys", "Phone charger", "Change of clothes", "Children's essentials"])
+                           "Extra keys", "Phone charger", "Change of clothes", "Children's essentials"],
+                          key="emergency_bag")
         
         step3 = st.checkbox("### Step 3: Establish a code word")
         if step3:
             st.text_input("Create a code word to use with trusted friends/family when you need help",
-                         placeholder="e.g., 'Is Aunt Mary coming?'")
+                         placeholder="e.g., 'Is Aunt Mary coming?'", key="code_word")
         
         step4 = st.checkbox("### Step 4: Identify safe places to go")
         if step4:
             st.text_area("List safe locations you can go in an emergency",
-                        height=100, placeholder="e.g., Neighbor's house, local shelter, police station")
+                        height=100, placeholder="e.g., Neighbor's house, local shelter, police station", key="safe_places")
         
         step5 = st.checkbox("### Step 5: Plan for children")
         if step5:
             st.text_area("How will you keep children safe? Who can help with childcare?",
-                        height=100)
+                        height=100, key="children_plan")
         
         if st.button("Save Safety Plan", key="save_plan_btn"):
             st.success("Safety plan saved. Remember to store this information securely.")
@@ -639,14 +645,14 @@ elif selected == "Offline Access":
                 <ol>
                     <li>Open this page on your mobile device</li>
                     <li>Tap the share button in your browser</li>
-                    <li>Select "Add to Home Screen"</li>
+                    <li>Select \"Add to Home Screen\"</li>
                 </ol>
                 <p><strong>Once installed:</strong></p>
                 <ul>
                     <li>Works completely offline</li>
                     <li>Fast access to emergency contacts</li>
                     <li>GPS navigation to shelters</li>
-                    <li>Discreet "Safe Exit" feature</li>
+                    <li>Discreet \"Safe Exit\" feature</li>
                 </ul>
             </div>
         """, unsafe_allow_html=True)
